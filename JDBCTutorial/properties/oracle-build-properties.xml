@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project name="6leb Properties" default="all" basedir=".">
+
+
+  <property name="JAVAC" value="c:\\Program Files\\Java\\jdk1.8.0_60\\bin\\javac"/>
+  <property name="JAVA" value="c:\\Program Files\\Java\\jdk1.8.0_60\\bin\\java"/>
+
+  <property name="PROPERTIESFILE" value="properties/oracle-build-properties.xml"/>
+  <property name="MYSQLDRIVER" value="C:\\mysql\\mysql-connector-java-5.1.15-bin.jar"/>
+
+  <path id="CLASSPATH">
+    <pathelement location="classes"/>
+    <pathelement location="${MYSQLDRIVER}"/>
+    <pathelement location="lib/JDBCTutorial.jar"/>
+  </path>
+
+
+  <property name="DB.VENDOR" value="oracle"/>
+  <property name="DB.DRIVER" value="oracle.jdbc.OracleDriver"/>
+  <property name="DB.HOST" value="localhost"/>
+  <property name="DB.PORT" value="1521"/>
+  <property name="DB.SID" value="xe"/>
+  <property name="DB.URL.NEWDATABASE" value="jdbc:oracle:thin://${DB.HOST}:${DB.PORT}"/>
+  <property name="DB.URL" value="jdbc:oracle:thin:@localhost:1521:xe"/>
+  <property name="DB.USER" value="gleb"/>
+  <property name="DB.PASSWORD" value="1"/>
+  <property name="DB.DELIMITER" value=";"/>
+
+</project>
