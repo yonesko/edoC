@@ -30,26 +30,41 @@ public class Main {
     }
     static List<Tree> scanLevel(int level, int start, int end) {
         List<Tree> result = new ArrayList<>();
-        for (int i = start; i < end; i++) {
-
+        Tree tmp = null;
+        for (int i = start; i < end - 1; i++) {
+//            result.add(new Tree(null, lNambas.get(i), i, i, level));
+            if (lNambas.get(i) != lNambas.get(i + 1)) {
+                result.add(new Tree(null, lNambas.get(i), i, i, level));
+            } else {
+                if (tmp == null)
+                    tmp = new Tree(null, null, i, i, level);
+            }
         }
         return result;
     }
 }
 
 class Tree {
-    Tree t;
-    List<String> leaves;
+    Tree parent;
+    List<String> leaves = new ArrayList<>();
     int start;
     int end;
     int level;
 
-    public Tree getT() {
-        return t;
+    public Tree(Tree t, String leaf, int start, int end, int level) {
+        this.parent = t;
+        if (leaf != null)leaves.add(leaf);
+        this.start = start;
+        this.end = end;
+        this.level = level;
     }
 
-    public void setT(Tree t) {
-        this.t = t;
+    public Tree getParent() {
+        return parent;
+    }
+
+    public void setParent(Tree parent) {
+        this.parent = parent;
     }
 
     public int getStart() {
