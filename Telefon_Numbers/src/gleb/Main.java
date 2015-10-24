@@ -24,65 +24,47 @@ public class Main {
                 lNambas.add(s);
         }
         Collections.sort(lNambas);
-
         for (String lNamba : lNambas) {
             System.out.println(lNamba);
         }
         System.out.println();
-        //get overlaps
-        for (int i = 0; i < lNambas.size() - 1; i++) {
-            for (int j = i + 1; j < lNambas.size(); j++) {
-                String overlap = leftOverlap(lNambas.get(i), lNambas.get(j));
-                if (overlap.length() != 0 && !overlapHeap.contains(overlap))
-                    overlapHeap.add(overlap);
-            }
-        }
-        //sort overlaps by common
-        Collections.sort(overlapHeap);
-        int fn = 0;
-        overlapFrst.add(new ArrayList<>());
-        for (int i = 0; i < overlapHeap.size(); i++) {
-            overlapFrst.get(fn).add(overlapHeap.get(i));
-            if (i + 1 != overlapHeap.size()) {
-                String overlap = leftOverlap(overlapHeap.get(i), overlapHeap.get(i + 1));
-                if (overlap.length() == 0) {
-                    fn++;
-                    overlapFrst.add(new ArrayList<>());
-                }
-            }
-        }
-        //make tree
-        System.out.println(overlapFrst);
-        for (List<String> names : overlapFrst) {
-            Tree root = new Tree(names.get(0));
-            forest.add(root);
-            String prefix = root.getName();
-            Tree prev = root;
-            for (int i = 1; i < names.size(); i++) {
-                String curName = names.get(i);
-                System.out.println(prefix + " " + curName);
-                String cutCurName = cutPrefix(prefix, curName);
-                String curOverlap = leftOverlap(curName, names.get(i - 1));
 
-                if (curOverlap.equals(prefix)) {
-                    root.addChild(prev = new Tree(cutCurName));
-                }
-                else {
-                    prefix = curOverlap;
-                    root = prev;
-                    root.addChild(prev = new Tree(cutPrefix(prefix, curName)));
-                }
-            }
-        }
+        deep(null, 0, lNambas.size());
+
         for (Tree tree : forest) {
-            tree.show();
-            System.out.println();
+            System.out.println(tree);
         }
-        //append leaves
-
-
     }//main
 
+    static void deep(Tree root, int start, int end) {
+        System.out.println(root);
+        int offset = getOffset(root);
+        String overlap = lNambas.get(start).substring(offset);
+        Tree tree = new Tree(overlap, root);
+        if (root == null) forest.add(tree);
+
+        for (int i = start + 1; i < end; i++) {
+            String curNam = lNambas.get(i).substring(offset);
+            String candOvlp = leftOverlap(overlap, curNam);
+
+            if (candOvlp.length() == 0) {
+                deep(tree, start, i);
+            }
+            if (candOvlp.length() < overlap.length()) {
+                overlap = candOvlp;
+                tree.setName(overlap);
+            }
+        }
+    }
+    static int getOffset(Tree t) {
+        int result = 0;
+        if (t != null)
+            while ( t != null) {
+                result += t.getName().length();
+                t = t.getParent();
+            }
+        return result;
+    }
     static String cutPrefix(String prefix, String s) {
             return s.substring(prefix.length());
     }
@@ -109,33 +91,39 @@ public class Main {
 
 class Tree {
     private String name;
-    private List<Tree> children;
+    private Tree parent;
 
-    Tree (String name) {
-        this.name = name;
-        children = new ArrayList<>();
+    public Tree getParent() {
+        return parent;
     }
-    void addChild(Tree c) {
-        if (children == null)
-            children = new ArrayList<>();
-        children.add(c);
+
+    Tree (String name, Tree parent) {
+        this.name = name;
+        this.parent = parent;
+
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setParent(Tree parent) {
+        this.parent = parent;
     }
 
     public String getName() {
         return name;
     }
 
-    private void show(int indent) {
-        char[] i = new char[indent];
-        Arrays.fill(i, '\t');
-        System.out.println(new String(i) + name);
-
-        for (Tree child : children) {
-            child.show(indent + 1);
-        }
+    @Override
+    public String toString() {
+        return "Tree{" +
+                "name='" + name + '\'' +
+                ", parent=" + (parent == null ? null : parent.name) +
+                '}';
     }
 
-    void show(){
-        show(0);
+    void show() {
+
     }
 }
