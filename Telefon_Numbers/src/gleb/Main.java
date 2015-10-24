@@ -1,7 +1,5 @@
 package gleb;
 
-import oracle.sql.CharacterSet;
-
 import java.io.*;
 import java.util.*;
 
@@ -37,24 +35,32 @@ public class Main {
     }//main
 
     static void deep(Tree root, int start, int end) {
-        System.out.println(root);
+        System.out.println("deep " + root + " " + start + " " + end);
         int offset = getOffset(root);
-        String overlap = lNambas.get(start).substring(offset);
-        Tree tree = new Tree(overlap, root);
-        if (root == null) forest.add(tree);
+        List<String> minPrefix = new ArrayList<>();
+        minPrefix.add(lNambas.get(start).substring(offset));
 
         for (int i = start + 1; i < end; i++) {
-            String curNam = lNambas.get(i).substring(offset);
-            String candOvlp = leftOverlap(overlap, curNam);
+            String curName = lNambas.get(i).substring(offset);
+            String lastPrefix = minPrefix.get(minPrefix.size() - 1);
+            String curPrefix = leftOverlap(curName, lastPrefix);
 
-            if (candOvlp.length() == 0) {
-                deep(tree, start, i);
-            }
-            if (candOvlp.length() < overlap.length()) {
-                overlap = candOvlp;
-                tree.setName(overlap);
-            }
+            if (curPrefix.length() == 0)
+                minPrefix.add(curName);
+            else if (curPrefix.length() < lastPrefix.length())
+                minPrefix.set(minPrefix.size() - 1, curPrefix);
         }
+        System.out.println(minPrefix);
+    }
+
+    static Tree getTree(String name) {
+        for (Tree tree : forest)
+            if (tree.getName().equals(name))
+                return tree;
+        return null;
+    }
+    static void addTree(String name, Tree root) {
+        forest.add(new Tree(name, root));
     }
     static int getOffset(Tree t) {
         int result = 0;
@@ -71,12 +77,6 @@ public class Main {
     static String cutPrefix(StringBuilder prefix, String s) {
         return cutPrefix(new String(prefix), s);
     }
-    static Tree getTree(String name) {
-        for (Tree tree : forest)
-            if (tree.getName().equals(name))
-                return tree;
-        return null;
-    }
     static String leftOverlap(String a, String b) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < Math.min(a.length(), b.length()); i++) {
@@ -92,10 +92,14 @@ public class Main {
 class Tree {
     private String name;
     private Tree parent;
+    private int start;
+    private int end;
 
     public Tree getParent() {
         return parent;
     }
+
+
 
     Tree (String name, Tree parent) {
         this.name = name;
