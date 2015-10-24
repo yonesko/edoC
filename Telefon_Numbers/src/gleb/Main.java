@@ -21,6 +21,10 @@ public class Main {
         }
         overlaps.add(lNambas);
 
+        for (String lNamba : lNambas) {
+            System.out.println(lNamba);
+        }
+
 
         for (int k = 0;;k++) {
             List<String> lvlOverlaps = new ArrayList<>();
@@ -55,7 +59,9 @@ public class Main {
             }
         }
 
-        System.out.println(forest);
+        for (Tree tree : forest) {
+            System.out.println(tree);
+        }
 
     }
     static String leftOverlap(String a, String b) {
@@ -88,7 +94,7 @@ class Tree {
 
     @Override
     public String toString() {
-        return name + " -> " + parent == null ? null : parent.name;
+        return name + " -> " + (parent == null ? null : parent.name);
     }
 }
 
