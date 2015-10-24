@@ -1,5 +1,7 @@
 package gleb;
 
+import oracle.sql.CharacterSet;
+
 import java.io.*;
 import java.util.*;
 
@@ -7,62 +9,91 @@ public class Main {
     static BufferedReader bfNambas;
     static List<String> lNambas;
     static List<Tree> forest;
-    static List<List<String>> overlaps;
+    static List<String> overlapHeap;
+    static List<List<String>> overlapFrst;
 
     public static void main(String[] args) throws IOException {
         bfNambas = new LineNumberReader(new FileReader("resources/fileservlet.txt"));
         lNambas = new ArrayList<>(Integer.parseInt(bfNambas.readLine()));
-        overlaps = new ArrayList<>();
         forest = new ArrayList<>();
+        overlapHeap = new ArrayList<>();
+        overlapFrst = new ArrayList<>();
         {
             String s;
             while ((s = bfNambas.readLine()) != null)
                 lNambas.add(s);
         }
-        overlaps.add(lNambas);
+        Collections.sort(lNambas);
 
         for (String lNamba : lNambas) {
             System.out.println(lNamba);
         }
-
-
-        for (int k = 0;;k++) {
-            List<String> lvlOverlaps = new ArrayList<>();
-            for (int i = 0; i < overlaps.get(k).size() - 1; i++) {
-                for (int j = i + 1; j < overlaps.get(k).size(); j++) {
-                    String overlap = leftOverlap(overlaps.get(k).get(i), overlaps.get(k).get(j));
-                    if (overlap.length() != 0 && !lvlOverlaps.contains(overlap))
-                        lvlOverlaps.add(overlap);
-                }
+        System.out.println();
+        //get overlaps
+        for (int i = 0; i < lNambas.size() - 1; i++) {
+            for (int j = i + 1; j < lNambas.size(); j++) {
+                String overlap = leftOverlap(lNambas.get(i), lNambas.get(j));
+                if (overlap.length() != 0 && !overlapHeap.contains(overlap))
+                    overlapHeap.add(overlap);
             }
-            if (lvlOverlaps.size() == 0)
-                break;
-            overlaps.add(lvlOverlaps);
         }
-
-        System.out.println(overlaps);
-
-        for (int i = overlaps.size() - 1; i >= 0; i--) {
-            List<String> curLvl = overlaps.get(i);
-            List<String> prevLvl = i == overlaps.size() - 1 ? null : overlaps.get(i + 1);
-            for (int j = 0; j < curLvl.size(); j++) {
-                if (i == overlaps.size() - 1) {
-                    forest.add(new Tree(null, curLvl.get(j)));
-                    continue;
-                }
-                for (int k = 0; k < prevLvl.size(); k++) {
-                    if (curLvl.get(j).startsWith(prevLvl.get(k)))
-                        forest.add(new Tree(getTree(prevLvl.get(k)), curLvl.get(j)));
-                    else
-                        forest.add(new Tree(null, curLvl.get(j)));
+        //sort overlaps by common
+        Collections.sort(overlapHeap);
+        int fn = 0;
+        overlapFrst.add(new ArrayList<>());
+        for (int i = 0; i < overlapHeap.size(); i++) {
+            overlapFrst.get(fn).add(overlapHeap.get(i));
+            if (i + 1 != overlapHeap.size()) {
+                String overlap = leftOverlap(overlapHeap.get(i), overlapHeap.get(i + 1));
+                if (overlap.length() == 0) {
+                    fn++;
+                    overlapFrst.add(new ArrayList<>());
                 }
             }
         }
+        //make tree
+        System.out.println(overlapFrst);
+        for (List<String> names : overlapFrst) {
+            Tree root = new Tree(names.get(0));
+            forest.add(root);
+            String prefix = root.getName();
+            Tree prev = root;
+            for (int i = 1; i < names.size(); i++) {
+                String curName = names.get(i);
+                System.out.println(prefix + " " + curName);
+                String cutCurName = cutPrefix(prefix, curName);
+                String curOverlap = leftOverlap(curName, names.get(i - 1));
 
+                if (curOverlap.equals(prefix)) {
+                    root.addChild(prev = new Tree(cutCurName));
+                }
+                else {
+                    prefix = curOverlap;
+                    root = prev;
+                    root.addChild(prev = new Tree(cutPrefix(prefix, curName)));
+                }
+            }
+        }
         for (Tree tree : forest) {
-            System.out.println(tree);
+            tree.show();
+            System.out.println();
         }
+        //append leaves
 
+
+    }//main
+
+    static String cutPrefix(String prefix, String s) {
+            return s.substring(prefix.length());
+    }
+    static String cutPrefix(StringBuilder prefix, String s) {
+        return cutPrefix(new String(prefix), s);
+    }
+    static Tree getTree(String name) {
+        for (Tree tree : forest)
+            if (tree.getName().equals(name))
+                return tree;
+        return null;
     }
     static String leftOverlap(String a, String b) {
         StringBuilder result = new StringBuilder();
@@ -74,27 +105,37 @@ public class Main {
         }
         return new String(result);
     }
-    static Tree getTree(String name) {
-        for (Tree tree : forest) {
-            if (tree.name.equals(name))
-                return tree;
-        }
-        return null;
-    }
 }
 
 class Tree {
-    Tree parent;
-    String name;
+    private String name;
+    private List<Tree> children;
 
-    public Tree(Tree parent, String name) {
-        this.parent = parent;
+    Tree (String name) {
         this.name = name;
+        children = new ArrayList<>();
+    }
+    void addChild(Tree c) {
+        if (children == null)
+            children = new ArrayList<>();
+        children.add(c);
     }
 
-    @Override
-    public String toString() {
-        return name + " -> " + (parent == null ? null : parent.name);
+    public String getName() {
+        return name;
+    }
+
+    private void show(int indent) {
+        char[] i = new char[indent];
+        Arrays.fill(i, '\t');
+        System.out.println(new String(i) + name);
+
+        for (Tree child : children) {
+            child.show(indent + 1);
+        }
+    }
+
+    void show(){
+        show(0);
     }
 }
-
