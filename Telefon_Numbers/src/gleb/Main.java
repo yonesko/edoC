@@ -7,88 +7,88 @@ public class Main {
     static BufferedReader bfNambas;
     static List<String> lNambas;
     static List<Tree> forest;
+    static List<List<String>> overlaps;
 
     public static void main(String[] args) throws IOException {
-        bfNambas = new LineNumberReader(new FileReader("resources/fileservlet2.txt"));
+        bfNambas = new LineNumberReader(new FileReader("resources/fileservlet.txt"));
         lNambas = new ArrayList<>(Integer.parseInt(bfNambas.readLine()));
+        overlaps = new ArrayList<>();
+        forest = new ArrayList<>();
         {
             String s;
             while ((s = bfNambas.readLine()) != null)
                 lNambas.add(s);
         }
-        Collections.sort(lNambas);
+        overlaps.add(lNambas);
 
-        Queue<Tree> Q = new ArrayDeque<>();
-        Q.addAll(scanLevel(0, 0, lNambas.size()));
 
-        while (!Q.isEmpty()) {
-            Tree c = Q.remove();
-            Q.addAll(scanLevel(c.getLevel() + 1, c.getStart(), c.getEnd()));
+        for (int k = 0;;k++) {
+            List<String> lvlOverlaps = new ArrayList<>();
+            for (int i = 0; i < overlaps.get(k).size() - 1; i++) {
+                for (int j = i + 1; j < overlaps.get(k).size(); j++) {
+                    String overlap = leftOverlap(overlaps.get(k).get(i), overlaps.get(k).get(j));
+                    if (overlap.length() != 0 && !lvlOverlaps.contains(overlap))
+                        lvlOverlaps.add(overlap);
+                }
+            }
+            if (lvlOverlaps.size() == 0)
+                break;
+            overlaps.add(lvlOverlaps);
         }
 
+        System.out.println(overlaps);
 
-    }
-    static List<Tree> scanLevel(int level, int start, int end) {
-        List<Tree> result = new ArrayList<>();
-        Tree tmp = null;
-        for (int i = start; i < end - 1; i++) {
-//            result.add(new Tree(null, lNambas.get(i), i, i, level));
-            if (lNambas.get(i) != lNambas.get(i + 1)) {
-                result.add(new Tree(null, lNambas.get(i), i, i, level));
-            } else {
-                if (tmp == null)
-                    tmp = new Tree(null, null, i, i, level);
+        for (int i = overlaps.size() - 1; i >= 0; i--) {
+            List<String> curLvl = overlaps.get(i);
+            List<String> prevLvl = i == overlaps.size() - 1 ? null : overlaps.get(i + 1);
+            for (int j = 0; j < curLvl.size(); j++) {
+                if (i == overlaps.size() - 1) {
+                    forest.add(new Tree(null, curLvl.get(j)));
+                    continue;
+                }
+                for (int k = 0; k < prevLvl.size(); k++) {
+                    if (curLvl.get(j).startsWith(prevLvl.get(k)))
+                        forest.add(new Tree(getTree(prevLvl.get(k)), curLvl.get(j)));
+                    else
+                        forest.add(new Tree(null, curLvl.get(j)));
+                }
             }
         }
-        return result;
+
+        System.out.println(forest);
+
+    }
+    static String leftOverlap(String a, String b) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < Math.min(a.length(), b.length()); i++) {
+            if (a.charAt(i) == b.charAt(i))
+                result.append(a.charAt(i));
+            else
+                break;
+        }
+        return new String(result);
+    }
+    static Tree getTree(String name) {
+        for (Tree tree : forest) {
+            if (tree.name.equals(name))
+                return tree;
+        }
+        return null;
     }
 }
 
 class Tree {
     Tree parent;
-    List<String> leaves = new ArrayList<>();
-    int start;
-    int end;
-    int level;
+    String name;
 
-    public Tree(Tree t, String leaf, int start, int end, int level) {
-        this.parent = t;
-        if (leaf != null)leaves.add(leaf);
-        this.start = start;
-        this.end = end;
-        this.level = level;
-    }
-
-    public Tree getParent() {
-        return parent;
-    }
-
-    public void setParent(Tree parent) {
+    public Tree(Tree parent, String name) {
         this.parent = parent;
+        this.name = name;
     }
 
-    public int getStart() {
-        return start;
-    }
-
-    public void setStart(int start) {
-        this.start = start;
-    }
-
-    public int getEnd() {
-        return end;
-    }
-
-    public void setEnd(int end) {
-        this.end = end;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
+    @Override
+    public String toString() {
+        return name + " -> " + parent == null ? null : parent.name;
     }
 }
 
